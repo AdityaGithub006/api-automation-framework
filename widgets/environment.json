@@ -1,0 +1,1 @@
+[{"values":["local"],"name":"env"},{"values":["http://localhost:8080"],"name":"baseUrl"},{"values":["Maven"],"name":"executor"},{"values":["RestAssured + TestNG"],"name":"framework"}]

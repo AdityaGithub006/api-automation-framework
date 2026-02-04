@@ -29,12 +29,12 @@ public class BaseApiClient {
                 .expectContentType(ContentType.JSON)
                 .build();
     }
-    public static ResponseSpecification res400Json(){
+    public static ResponseSpecification res400(){
         return new ResponseSpecBuilder()
                 .expectStatusCode(400)
                 .build();
     }
-    public static ResponseSpecification res404Json(){
+    public static ResponseSpecification res404(){
         return new ResponseSpecBuilder()
                 .expectStatusCode(404)
                 .build();

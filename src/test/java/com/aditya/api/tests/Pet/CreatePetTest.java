@@ -1,4 +1,4 @@
-package com.aditya.api.test.Pet;
+package com.aditya.api.tests.Pet;
 
 
 import com.aditya.api.client.BaseApiClient;
@@ -29,6 +29,6 @@ public class CreatePetTest {
     public void getPetShouldReturn_404whenPetNotFound(){
         petClient.getPetById(9999999L)
                 .then()
-                .spec(BaseApiClient.res404Json());
+                .spec(BaseApiClient.res404());
     }
 }

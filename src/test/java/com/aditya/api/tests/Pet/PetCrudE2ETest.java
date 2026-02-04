@@ -1,5 +1,7 @@
 package com.aditya.api.tests.Pet;
 
+import com.aditya.api.base.BaseTest;
+import com.aditya.api.base.TestContext;
 import com.aditya.api.client.BaseApiClient;
 import com.aditya.api.client.PetClient;
 import com.aditya.api.models.Pet;
@@ -8,7 +10,7 @@ import io.restassured.response.Response;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class PetCrudE2ETest {
+public class PetCrudE2ETest extends BaseTest {
     private final PetClient petClient = new PetClient();
 
     @Test
@@ -25,19 +27,14 @@ public class PetCrudE2ETest {
 
         Assert.assertEquals(createdId, pet.id, "Created Pet Id mismatch");
 
+        // Register for automatic cleanup (@AfterMethod)
+        TestContext.setPetId(createdId);
+
         // 2) Get
         petClient.getPetById(createdId)
                 .then()
                 .spec(BaseApiClient.res200Json());
 
-        // 3) Delete
-        petClient.deletePet(createdId)
-                .then()
-                .spec(BaseApiClient.res200Json());
-
-        // 4) Verify Delete
-        petClient.getPetById(createdId)
-                .then()
-                .spec(BaseApiClient.res404());
+        // No explicit delete here — BaseTest.cleanup() will delete after test
     }
 }

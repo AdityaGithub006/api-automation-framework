@@ -24,4 +24,7 @@ public final class TestConfig {
     public static String baseUrl() {
         return PROPS.getProperty("baseUrl");
     }
+    public static String basePath(){
+        return PROPS.getProperty("basePath", "");
+    }
 }

@@ -12,7 +12,7 @@ public class SmokeOpenApiTest {
         given()
                 .baseUri(TestConfig.baseUrl())
         .when()
-                .get("/api/v3/openapi.json")
+                .get("/openapi.json")
         .then()
                 .statusCode(200);
     }

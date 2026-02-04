@@ -12,18 +12,18 @@ public class PetClient {
                 .spec(BaseApiClient.reqJson())
                 .body(pet)
         .when()
-                .post("/api/v3/pet");
+                .post("/pet");
     }
     public Response getPetById(long id){
         return given()
                 .spec(BaseApiClient.reqJson())
         .when()
-                .get("/api/v3/pet/{id}", id);
+                .get("/pet/{id}", id);
     }
     public Response deletePet(long id){
         return given()
                 .spec(BaseApiClient.reqJson())
         .when()
-                .delete("/api/v3/pet/{id}", id);
+                .delete("/pet/{id}", id);
     }
 }

@@ -16,6 +16,7 @@ public class BaseApiClient {
     public static RequestSpecification reqJson(){
         return new RequestSpecBuilder()
                 .setBaseUri(TestConfig.baseUrl())
+                .setBasePath(TestConfig.basePath())
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .addFilter(new RequestLoggingFilter())
@@ -40,6 +41,8 @@ public class BaseApiClient {
     }
     public RequestSpecification reqJsonWithAuth(String token){
         return new RequestSpecBuilder()
+                .setBaseUri(TestConfig.baseUrl())
+                .setBasePath(TestConfig.basePath())
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .addHeader("Authorization", "Bearer"+token)

@@ -30,4 +30,10 @@ public class CreatePetTest {
         Assert.assertEquals(actualId.longValue(), (long)id, "Pet Id Matched");
         Assert.assertEquals(actualName, name, "Pet Name Matched");
     }
+    @Test
+    public void getPetShouldReturn_404whenPetNotFound(){
+        petClient.getPetById(9999999L)
+                .then()
+                .spec(BaseApiClient.res404Json());
+    }
 }

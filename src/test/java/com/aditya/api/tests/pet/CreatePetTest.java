@@ -7,6 +7,7 @@ import com.aditya.api.client.BaseApiClient;
 import com.aditya.api.client.PetClient;
 import com.aditya.api.models.Pet;
 import com.aditya.api.testdata.PetFactory;
+import io.qameta.allure.*;
 import io.restassured.response.Response;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -14,6 +15,10 @@ import org.testng.annotations.Test;
 
 public class CreatePetTest extends BaseTest {
     private final PetClient petClient = new PetClient();
+    @Epic("Pet API")
+    @Feature("Create Pet")
+    @Story("Create a new pet successfully")
+    @Severity(SeverityLevel.CRITICAL)
     @Test
     public void createPetShouldReturn_200andMatchIdName(){
         Pet pet = PetFactory.randomAvailablePet();

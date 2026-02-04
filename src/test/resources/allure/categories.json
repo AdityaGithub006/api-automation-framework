@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Assertion failures",
+    "matchedStatuses": ["failed"],
+    "messageRegex": ".*AssertionError.*"
+  },
+  {
+    "name": "TestNG failures",
+    "matchedStatuses": ["failed"],
+    "traceRegex": ".*org\\.testng\\..*"
+  },
+  {
+    "name": "Infrastructure / Network",
+    "matchedStatuses": ["broken"],
+    "messageRegex": ".*(Connection refused|ConnectException|UnknownHostException|SocketTimeoutException|Read timed out).*"
+  }
+]

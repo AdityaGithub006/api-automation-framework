@@ -1,7 +1,6 @@
 package com.aditya.api.tests.pet;
 
 import com.aditya.api.base.BaseTest;
-import com.aditya.api.base.TestContext;
 import com.aditya.api.client.BaseApiClient;
 import com.aditya.api.client.PetClient;
 import com.aditya.api.models.Pet;

@@ -8,6 +8,7 @@ import com.aditya.api.models.Pet;
 import com.aditya.api.testdata.PetFactory;
 import io.restassured.response.Response;
 import org.testng.Assert;
+import org.testng.Reporter;
 import org.testng.annotations.Test;
 
 public class PetCrudE2ETest extends BaseTest {
@@ -27,8 +28,7 @@ public class PetCrudE2ETest extends BaseTest {
 
         Assert.assertEquals(createdId, pet.id, "Created Pet Id mismatch");
 
-        // Register for automatic cleanup (@AfterMethod)
-        TestContext.setPetId(createdId);
+        Reporter.getCurrentTestResult().setAttribute("petId", createdId);
 
         // 2) Get
         petClient.getPetById(createdId)

@@ -89,6 +89,9 @@
             <include>**/*Test.java</include>
           </includes>
 
+          <parallel>classes</parallel>
+          <threadCount>4</threadCount>
+
           <systemPropertyVariables>
             <env>${env}</env>
             <allure.results.directory>

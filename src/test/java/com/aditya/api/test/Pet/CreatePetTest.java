@@ -1,36 +1,33 @@
 package com.aditya.api.test.Pet;
 
+
 import com.aditya.api.client.BaseApiClient;
-import com.aditya.api.config.TestConfig;
+import com.aditya.api.client.PetClient;
+import com.aditya.api.models.Pet;
+import io.restassured.response.Response;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
 
 public class CreatePetTest {
+    private final PetClient petClient = new PetClient();
     @Test
     public void createPetShouldReturn_200andMatchIdName(){
-        int id = ThreadLocalRandom.current().nextInt(100000, 999999);
+        long id = ThreadLocalRandom.current().nextInt(100000, 999999);
         String name = "HB-"+id;
 
-        Map<String, Object> body = Map.of(
-                "id", id,
-                "name", name,
-                "photoUrls", new String[]{"x"},
-                "status", "available"
-        );
-
-        given()
-                .spec(BaseApiClient.reqJson())
-                .body(body)
-        .when()
-                .post("/api/v3/pet")
-        .then()
+        Pet pet = new Pet(id, name, List.of("x"), "available");
+        Response res = petClient.createPet(pet);
+        res.then()
                 .spec(BaseApiClient.res200Json())
-                .body("id", equalTo(id))
-                .body("name", equalTo(name));
+                .log().all();
+        Number actualId = res.then().extract().path("id");
+        String actualName = res.then().extract().path("name");
+
+        Assert.assertEquals(actualId.longValue(), (long)id, "Pet Id Matched");
+        Assert.assertEquals(actualName, name, "Pet Name Matched");
     }
 }

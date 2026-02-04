@@ -1,2 +1,2 @@
 "DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
-"","1368","shouldLoadOpenApiSpec_200","Surefire suite","2026-02-04","passed","2026-02-04","com.aditya.api.smoke.SmokeOpenApiTest","Surefire test","com.aditya.api.smoke.SmokeOpenApiTest","shouldLoadOpenApiSpec_200"
+"","2013","shouldLoadOpenApiSpec_200","Surefire suite","2026-02-04","passed","2026-02-04","com.aditya.api.smoke.SmokeOpenApiTest","Surefire test","com.aditya.api.smoke.SmokeOpenApiTest","shouldLoadOpenApiSpec_200"

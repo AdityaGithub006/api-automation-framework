@@ -2,9 +2,17 @@ name: API Automation Tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+
+permissions:
+  contents: write          # needed for gh-pages push
+  pull-requests: write     # needed for PR comment
+
+concurrency:
+  group: api-tests-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   api-tests:
@@ -17,7 +25,7 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
+          distribution: temurin
           java-version: "17"
 
       - name: Cache Maven dependencies
@@ -28,39 +36,183 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2
 
-      # ✅ Start Petstore inside GitHub runner (GitHub Actions does NOT have your local Docker)
-      - name: Start Petstore (Docker)
-        run: |
-          docker pull swaggerapi/petstore3:latest
-          docker run -d --name petstore -p 8080:8080 swaggerapi/petstore3:latest
-          docker ps
-
-      # ✅ Wait until API is actually reachable (prevents flakiness / connection refused)
-      - name: Wait for Petstore to be ready
-        run: |
-          for i in {1..30}; do
-            if curl -sSf http://localhost:8080/api/v3/openapi.json > /dev/null; then
-              echo "Petstore is up!"
-              exit 0
-            fi
-            echo "Waiting for Petstore..."
-            sleep 2
-          done
-          echo "Petstore did not start in time"
-          docker logs petstore || true
-          exit 1
-
+      # ----------------------------
+      # 1) Run Tests
+      # PR -> smoke only
+      # main push -> smoke (keep it fast/gating)
+      # If you want "all tests" on main, change -Dgroups=smoke to -Dgroups=
+      # (or remove <groups>${groups}</groups> from surefire config)
+      # ----------------------------
       - name: Run API tests
-        run: mvn clean test -Denv=local
+        run: mvn clean test -Denv=ci -Dgroups=smoke
 
-      # ✅ Helpful diagnostics if tests fail
-      - name: Dump Petstore logs (on failure)
-        if: failure()
-        run: docker logs petstore || true
+      # ----------------------------
+      # 2) Compute summary for PR comment
+      # Parses Surefire's testng-results.xml
+      # ----------------------------
+      - name: Build test summary (TestNG)
+        if: always()
+        run: |
+          python3 - << 'PY'
+          import os, glob, xml.etree.ElementTree as ET, json
 
+          # TestNG report written by surefire
+          path = "target/surefire-reports/testng-results.xml"
+          summary = {
+            "total": 0, "passed": 0, "failed": 0, "skipped": 0,
+            "failed_tests": []
+          }
+
+          if os.path.exists(path):
+            tree = ET.parse(path)
+            root = tree.getroot()  # <testng-results ...>
+            # Attributes can vary, handle safely
+            summary["total"]  = int(root.attrib.get("total", "0"))
+            summary["passed"] = int(root.attrib.get("passed", "0"))
+            summary["failed"] = int(root.attrib.get("failed", "0"))
+            summary["skipped"]= int(root.attrib.get("skipped","0"))
+
+            # Collect failed test names (best effort)
+            for test_method in root.findall(".//test-method"):
+              status = test_method.attrib.get("status", "").upper()
+              if status == "FAIL":
+                cls = test_method.attrib.get("class", "")
+                name = test_method.attrib.get("name", "")
+                summary["failed_tests"].append(f"{cls}.{name}" if cls else name)
+
+          # Fallback if XML isn't present
+          else:
+            # Try surefire summary text
+            txts = glob.glob("target/surefire-reports/*.txt")
+            # Keep it minimal if no report exists
+            summary["note"] = "No testng-results.xml found."
+
+          os.makedirs("target/ci", exist_ok=True)
+          with open("target/ci/test-summary.json", "w") as f:
+            json.dump(summary, f, indent=2)
+
+          print("Summary:", summary)
+          PY
+
+      # ----------------------------
+      # 3) Upload Allure raw results
+      # ----------------------------
       - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
           path: target/allure-results
+
+      # ----------------------------
+      # 4) Generate Allure HTML report + keep history (trend)
+      # Only meaningful if allure-results exists
+      # ----------------------------
+      - name: Pull previous Allure history (gh-pages)
+        if: always()
+        run: |
+          set +e
+          git clone --depth 1 --branch gh-pages "https://github.com/${{ github.repository }}.git" gh-pages
+          if [ -d "gh-pages/allure-history" ]; then
+            mkdir -p target/allure-results/history
+            cp -R gh-pages/allure-history/* target/allure-results/history/ || true
+          fi
+          set -e
+
+      - name: Generate Allure HTML report
+        if: always()
+        run: mvn -q allure:report
+
+      - name: Prepare Pages content (report + history)
+        if: always()
+        run: |
+          rm -rf public
+          mkdir -p public
+          # Allure Maven plugin output:
+          # target/site/allure-maven-plugin
+          cp -R target/site/allure-maven-plugin/* public/ || true
+
+          # Save history for next runs
+          mkdir -p public/allure-history
+          if [ -d "public/history" ]; then
+            cp -R public/history/* public/allure-history/ || true
+          fi
+
+          # Add a simple landing file if needed
+          if [ ! -f "public/index.html" ]; then
+            echo "<html><body><h3>Allure report not generated</h3></body></html>" > public/index.html
+          fi
+
+      - name: Upload Allure HTML report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: public
+
+      # ----------------------------
+      # 5) Publish to GitHub Pages (only on push to main)
+      # Report will be at: https://<user>.github.io/<repo>/
+      # ----------------------------
+      - name: Deploy Allure report to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: public
+
+      # ----------------------------
+      # 6) Sticky PR comment with summary + link
+      # Only on PRs
+      # ----------------------------
+      - name: Comment on PR with test summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let summary = { total: 0, passed: 0, failed: 0, skipped: 0, failed_tests: [] };
+            try {
+              summary = JSON.parse(fs.readFileSync('target/ci/test-summary.json', 'utf8'));
+            } catch (e) {}
+
+            const statusEmoji = summary.failed > 0 ? "❌" : "✅";
+            const title = `${statusEmoji} API Tests (TestNG)`;
+            const lines = [];
+            lines.push(`**${title}**`);
+            lines.push(`- Total: **${summary.total}** | Passed: **${summary.passed}** | Failed: **${summary.failed}** | Skipped: **${summary.skipped}**`);
+            lines.push(`- Commit: \`${context.sha.substring(0,7)}\``);
+            lines.push(`- Workflow: **${context.workflow}**`);
+
+            // Allure link (only really valid after merge/push to main, but keep it visible)
+            const pagesUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/`;
+            lines.push(`- Allure Report (main): ${pagesUrl}`);
+
+            if (summary.failed_tests && summary.failed_tests.length) {
+              const top = summary.failed_tests.slice(0, 8);
+              lines.push(`\n**Failed tests (top ${top.length}):**`);
+              for (const t of top) lines.push(`- \`${t}\``);
+              if (summary.failed_tests.length > top.length) {
+                lines.push(`- …and ${summary.failed_tests.length - top.length} more`);
+              }
+            }
+
+            const body = lines.join("\n");
+
+            // Sticky comment: update if exists
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const comments = await github.rest.issues.listComments({ owner, repo, issue_number });
+            const marker = "<!-- api-tests-summary -->";
+            const existing = comments.data.find(c => c.body && c.body.includes(marker));
+
+            const finalBody = `${marker}\n${body}`;
+
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body: finalBody });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body: finalBody });
+            }

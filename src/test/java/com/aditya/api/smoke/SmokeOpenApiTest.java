@@ -7,7 +7,7 @@ import static io.restassured.RestAssured.given;
 
 public class SmokeOpenApiTest {
 
-    @Test
+    @Test(groups = {"smoke"})
     public void shouldLoadOpenApiSpec_200() {
         given()
                 .baseUri(TestConfig.baseUrl())

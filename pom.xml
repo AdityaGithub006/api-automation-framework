@@ -21,6 +21,8 @@
     <allure.version>2.32.0</allure.version>
     <allure.maven.version>2.17.0</allure.maven.version>
     <env>local</env>
+    <groups>smoke</groups>
+    <excludedGroups></excludedGroups>
   </properties>
 
   <dependencies>
@@ -82,6 +84,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.4</version>
+
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
 
@@ -89,14 +92,18 @@
             <include>**/*Test.java</include>
           </includes>
 
+          <!-- Parallel execution -->
           <parallel>classes</parallel>
           <threadCount>4</threadCount>
 
+          <!-- TestNG groups -->
+          <groups>${groups}</groups>
+          <excludedGroups>${excludedGroups}</excludedGroups>
+
+          <!-- System props available in tests -->
           <systemPropertyVariables>
             <env>${env}</env>
-            <allure.results.directory>
-              ${project.build.directory}/allure-results
-            </allure.results.directory>
+            <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
           </systemPropertyVariables>
         </configuration>
       </plugin>

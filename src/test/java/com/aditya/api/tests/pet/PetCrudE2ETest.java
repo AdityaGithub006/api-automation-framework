@@ -14,7 +14,7 @@ import org.testng.annotations.Test;
 public class PetCrudE2ETest extends BaseTest {
     private final PetClient petClient = new PetClient();
 
-    @Test
+    @Test(groups = {"e2e"})
     public void crudTest(){
 
         // 1) Create

@@ -19,7 +19,7 @@ public class CreatePetTest extends BaseTest {
     @Feature("Create Pet")
     @Story("Create a new pet successfully")
     @Severity(SeverityLevel.CRITICAL)
-    @Test
+    @Test (groups = {"regression"})
     public void createPetShouldReturn_200andMatchIdName(){
         Pet pet = PetFactory.randomAvailablePet();
         Response res = petClient.createPet(pet);

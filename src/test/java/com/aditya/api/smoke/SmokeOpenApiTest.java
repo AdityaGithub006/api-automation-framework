@@ -11,6 +11,7 @@ public class SmokeOpenApiTest {
     public void shouldLoadOpenApiSpec_200() {
         given()
                 .baseUri(TestConfig.baseUrl())
+                .basePath(TestConfig.basePath())
         .when()
                 .get("/openapi.json")
         .then()

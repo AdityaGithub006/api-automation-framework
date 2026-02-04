@@ -19,6 +19,8 @@
     <testng.version>7.12.0</testng.version>
     <slf4j.version>2.0.17</slf4j.version>
     <logback.version>1.5.26</logback.version>
+    <allure.version>2.32.0</allure.version>
+    <allure.maven.version>2.17.0</allure.maven.version>
     <env>local</env>
   </properties>
 
@@ -64,6 +66,14 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Source: https://mvnrepository.com/artifact/io.qameta.allure/allure-testng -->
+    <dependency>
+      <groupId>io.qameta.allure</groupId>
+      <artifactId>allure-testng</artifactId>
+      <version>${allure.version}</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -75,20 +85,27 @@
         <version>3.5.4</version>
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
+
           <includes>
             <include>**/*Test.java</include>
           </includes>
-          <properties>
-            <property>
-              <name>listener</name>
-              <value>org.testng.reporters.EmailableReporter2</value>
-            </property>
-          </properties>
+
           <systemPropertyVariables>
             <env>${env}</env>
+            <allure.results.directory>
+              ${project.build.directory}/allure-results
+            </allure.results.directory>
           </systemPropertyVariables>
         </configuration>
       </plugin>
+
+      <!-- Allure Maven Plugin (separate) -->
+      <plugin>
+        <groupId>io.qameta.allure</groupId>
+        <artifactId>allure-maven</artifactId>
+        <version>${allure.maven.version}</version>
+      </plugin>
+
     </plugins>
   </build>
 

@@ -1,4 +1,4 @@
-package com.aditya.api.tests.Pet;
+package com.aditya.api.tests.pet;
 
 
 import com.aditya.api.base.BaseTest;
@@ -30,7 +30,8 @@ public class CreatePetTest extends BaseTest {
         Assert.assertEquals(actualName, pet.name, "Pet Name Matched");
 
         res.then()
-                .spec(BaseApiClient.res200JsonWithSchema("schema/pet/create_pet_200.json"));
+                .spec(BaseApiClient.res200JsonWithSchema("schema/pet/create_pet_200.json"))
+                .log().all();
     }
     @Test
     public void getPetShouldReturn_404whenPetNotFound(){
